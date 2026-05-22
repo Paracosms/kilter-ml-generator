@@ -1,0 +1,6 @@
+{
+  "train": {"rows": 190439, "unique_uuids": 116125},
+  "test": {"rows": 23787, "unique_uuids": 14517},
+  "val": {"rows": 23676, "unique_uuids": 14515},
+  "uuid_overlap": {"train_test": 0, "train_val": 0, "test_val": 0}
+}

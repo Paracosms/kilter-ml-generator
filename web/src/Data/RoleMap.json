@@ -1,0 +1,8 @@
+{
+  "role_map": {
+    "12": "start",
+    "13": "regular",
+    "14": "finish",
+    "15": "foot"
+  }
+}
