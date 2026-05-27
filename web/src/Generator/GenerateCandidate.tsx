@@ -140,6 +140,7 @@ export function generateCandidate(
     }
 
     return {
+    // @ts-ignore
       climb,
       grade: options.grade,
       modifier,

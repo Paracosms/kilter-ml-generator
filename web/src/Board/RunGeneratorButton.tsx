@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { Grade } from "../Generator";
+import type { Grade, GradeModifier } from "../Generator";
 
 const GRADE_OPTIONS: Grade[] = [
   "v0",
@@ -19,22 +19,39 @@ const GRADE_OPTIONS: Grade[] = [
 
 type RunGeneratorButtonProps = {
   grade: Grade;
+  modifier: GradeModifier;
   onGradeChange: (grade: Grade) => void;
+  onModifierChange: (modifier: GradeModifier) => void;
   onGenerate: () => void;
   errorMessage?: string | null;
 };
 
-function formatGradeLabel(grade: Grade) {
+function formatBaseGradeLabel(grade: Grade) {
   return `V${grade.slice(1)}`;
+}
+
+function formatTargetGradeLabel(grade: Grade, modifier: GradeModifier) {
+  const baseLabel = formatBaseGradeLabel(grade);
+  if (modifier === "minus") {
+    return `${baseLabel}-`;
+  }
+  if (modifier === "plus") {
+    return `${baseLabel}+`;
+  }
+  return baseLabel;
 }
 
 export function RunGeneratorButton({
   grade,
+  modifier,
   onGradeChange,
+  onModifierChange,
   onGenerate,
   errorMessage,
 }: RunGeneratorButtonProps) {
   const selectId = useId();
+  const modifierId = useId();
+  const targetLabel = formatTargetGradeLabel(grade, modifier);
 
   return (
     <section
@@ -50,7 +67,7 @@ export function RunGeneratorButton({
     >
       <div style={{ display: "grid", gap: 12 }}>
         <label htmlFor={selectId} style={{ fontSize: 14, fontWeight: 600 }}>
-          Target grade
+          Target grade ({targetLabel})
         </label>
         <select
           id={selectId}
@@ -66,10 +83,40 @@ export function RunGeneratorButton({
         >
           {GRADE_OPTIONS.map((option) => (
             <option key={option} value={option}>
-              {formatGradeLabel(option)}
+              {formatBaseGradeLabel(option)}
             </option>
           ))}
         </select>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <label
+            htmlFor={`${modifierId}-minus`}
+            style={{ display: "flex", gap: 6, alignItems: "center" }}
+          >
+            <input
+              id={`${modifierId}-minus`}
+              type="checkbox"
+              checked={modifier === "minus"}
+              onChange={(event) =>
+                onModifierChange(event.target.checked ? "minus" : "base")
+              }
+            />
+            V-
+          </label>
+          <label
+            htmlFor={`${modifierId}-plus`}
+            style={{ display: "flex", gap: 6, alignItems: "center" }}
+          >
+            <input
+              id={`${modifierId}-plus`}
+              type="checkbox"
+              checked={modifier === "plus"}
+              onChange={(event) =>
+                onModifierChange(event.target.checked ? "plus" : "base")
+              }
+            />
+            V+
+          </label>
+        </div>
         <button
           type="button"
           onClick={onGenerate}
@@ -95,4 +142,3 @@ export function RunGeneratorButton({
     </section>
   );
 }
-

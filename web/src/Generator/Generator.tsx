@@ -589,13 +589,21 @@ type BestCandidateOptions = {
   rng?: () => number;
   maxPlacementRetries?: number;
   iterations?: number;
+  onProgress?: (progress: {
+    iteration: number;
+    totalIterations: number;
+    currentScore: number;
+    bestScore: number;
+    bestCandidate: GeneratedCandidate;
+    bestUpdated: boolean;
+  }) => void | Promise<void>;
 };
 
 const scoreCandidate = async (candidate: GeneratedCandidate) => {
   const realismScore = evaluateRealism(candidate, placementIndex);
   const modelDifficulty = await predictCandidateDifficulty(candidate);
   const difficultyError = candidate.targetDifficulty - modelDifficulty;
-  const denominator = 1 + difficultyError;
+  const denominator = 1 + difficultyError * difficultyError;
   const score =
     denominator === 0 ? Number.POSITIVE_INFINITY : realismScore / denominator;
   return {
@@ -610,7 +618,11 @@ const scoreCandidate = async (candidate: GeneratedCandidate) => {
 export const generateBestCandidate = async (
   options: BestCandidateOptions,
 ): Promise<GeneratedCandidate> => {
-  const { iterations = DEFAULT_BEST_OF_CANDIDATES, ...generateOptions } = options;
+  const {
+    iterations = DEFAULT_BEST_OF_CANDIDATES,
+    onProgress,
+    ...generateOptions
+  } = options;
   let bestCandidate: GeneratedCandidate | null = null;
   let bestScore = Number.NEGATIVE_INFINITY;
 
@@ -623,9 +635,22 @@ export const generateBestCandidate = async (
     }
 
     const scored = await scoreCandidate(candidate);
-    if (scored.score > bestScore) {
+    const bestUpdated = scored.score > bestScore;
+    if (bestUpdated) {
       bestScore = scored.score;
       bestCandidate = scored.candidate;
+    }
+
+    if (onProgress) {
+      const bestCandidateForProgress = bestCandidate ?? scored.candidate;
+      await onProgress({
+        iteration: i + 1,
+        totalIterations: iterations,
+        currentScore: scored.score,
+        bestScore,
+        bestCandidate: bestCandidateForProgress,
+        bestUpdated,
+      });
     }
   }
 

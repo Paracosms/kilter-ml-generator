@@ -53,22 +53,39 @@ export type RealismEvaluatorOptions = {
   maxFinishDistanceY: number;
   maxFinishDistanceEuclidean: number;
   startReachMaxY: number;
+  // Y where start penalties begin; higher => more lenient, lower => harsher.
   startPenaltyStartY: number;
+  // Y below which finish penalties apply; higher => harsher, lower => more lenient.
   finishPenaltyBelowY: number;
+  // Optional min Y for finish penalty range; lower => softer penalty curve.
   finishPenaltyMinY?: number;
+  // Hard reject if a foot is farther than this from any non-foot hold.
+  footProximityRadius: number;
+  // Distance from start->finish line before a hold is penalized.
+  lineDistanceMax: number;
   zoneColumns: number;
   zoneRowsMain: number;
   kickboardPlacementIdMin: number;
+  // 0..1; lower => penalize concentration sooner, higher => allow denser clusters.
   maxZoneRatio: number;
+  // 0..1; higher => concentration contributes more to zone penalty.
   concentrationWeight: number;
+  // 0..1; added penalty if middle row empty; higher => stronger gap penalty.
   middleRowPenalty: number;
+  // 0..1; added penalty if middle column empty; higher => stronger gap penalty.
   middleColumnPenalty: number;
+  // 0..1; added penalty if center zone empty (when total >= min); higher => stronger penalty.
   centerZonePenalty: number;
+  // Minimum main-zone holds before center-zone penalty can apply; higher => less often.
   centerZoneMinTotal: number;
+  // Exponent applied to the final realism score; >1 makes penalties harsher.
+  overallScoreExponent: number;
   weights: {
+    // 0..1-ish; higher => this component impacts overall realism more.
     zone: number;
     start: number;
     finish: number;
+    line: number;
   };
 };
 
@@ -80,21 +97,36 @@ const DEFAULT_OPTIONS: RealismEvaluatorOptions = {
   maxFinishDistanceY: 48,
   maxFinishDistanceEuclidean: 64,
   startReachMaxY: 72,
+  // Start penalty begins above this Y (higher => more lenient on high starts).
   startPenaltyStartY: 48,
+  // Finish penalty begins below this Y (higher => more strict on low finishes).
   finishPenaltyBelowY: 36,
+  // Distance a start/regular/finish hold is required to be near a foot hold
+  footProximityRadius: 60,
+  // Penalty for any holds beyond 7ft from the line from start-finish
+  lineDistanceMax: 72,
   zoneColumns: 3,
   zoneRowsMain: 3,
   kickboardPlacementIdMin: 4000,
+  // Max fraction of holds allowed in a single zone before penalty (0..1).
   maxZoneRatio: 0.45,
+  // Weighting of concentration vs gap penalties (0..1).
   concentrationWeight: 0.6,
+  // Added penalty if middle row empty (0..1).
   middleRowPenalty: 0.35,
+  // Added penalty if middle column empty (0..1).
   middleColumnPenalty: 0.25,
+  // Added penalty if center zone empty (0..1).
   centerZonePenalty: 0.15,
+  // Minimum main holds to apply center-zone penalty.
   centerZoneMinTotal: 4,
+  overallScoreExponent: 1.5,
   weights: {
+    // Relative weights; normalized by total weight.
     zone: 0.5,
     start: 0.25,
     finish: 0.25,
+    line: 0.2,
   },
 };
 
@@ -130,6 +162,30 @@ const clamp = (value: number, min: number, max: number) =>
 
 const average = (values: number[]) =>
   values.reduce((sum, value) => sum + value, 0) / values.length;
+
+const averagePoint = (placements: Placement[]) => ({
+  x: average(placements.map((placement) => placement.x)),
+  y: average(placements.map((placement) => placement.y)),
+});
+
+const distanceToSegment = (
+  point: Placement,
+  start: Placement,
+  end: Placement,
+) => {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared === 0) {
+    return Math.hypot(point.x - start.x, point.y - start.y);
+  }
+  const t =
+    ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared;
+  const clampedT = clamp(t, 0, 1);
+  const projX = start.x + clampedT * dx;
+  const projY = start.y + clampedT * dy;
+  return Math.hypot(point.x - projX, point.y - projY);
+};
 
 const collectRolePlacements = (
   candidate: GeneratedCandidate,
@@ -269,11 +325,40 @@ export const evaluateRealism = (
     ROLE_ID_BY_NAME.start,
     placementIndex,
   );
+  const regulars = collectRolePlacements(
+    candidate,
+    ROLE_ID_BY_NAME.regular,
+    placementIndex,
+  );
   const finishes = collectRolePlacements(
     candidate,
     ROLE_ID_BY_NAME.finish,
     placementIndex,
   );
+  const feet = collectRolePlacements(
+    candidate,
+    ROLE_ID_BY_NAME.foot,
+    placementIndex,
+  );
+
+  if (feet.length > 0) {
+    const handPlacements = [...starts, ...regulars, ...finishes];
+    if (handPlacements.length === 0) {
+      return 0;
+    }
+    for (const foot of feet) {
+      let closest = Number.POSITIVE_INFINITY;
+      for (const hand of handPlacements) {
+        const distance = Math.hypot(foot.x - hand.x, foot.y - hand.y);
+        if (distance < closest) {
+          closest = distance;
+        }
+      }
+      if (closest > resolvedOptions.footProximityRadius) {
+        return 0;
+      }
+    }
+  }
 
   if (starts.length === 2) {
     const [first, second] = starts;
@@ -353,10 +438,31 @@ export const evaluateRealism = (
     finishScore = clamp(finishScore, 0, 1);
   }
 
+  let lineScore = 1;
+  if (starts.length > 0 && finishes.length > 0 && allPlacements.length > 0) {
+    const startAvg = averagePoint(starts);
+    const finishAvg = averagePoint(finishes);
+    const penalties = allPlacements.map((placement) => {
+      const distance = distanceToSegment(placement, startAvg, finishAvg);
+      if (distance <= resolvedOptions.lineDistanceMax) {
+        return 0;
+      }
+      return clamp(
+        (distance - resolvedOptions.lineDistanceMax) /
+          resolvedOptions.lineDistanceMax,
+        0,
+        1,
+      );
+    });
+    const averagePenalty = average(penalties);
+    lineScore = clamp(1 - averagePenalty, 0, 1);
+  }
+
   const weightTotal =
     resolvedOptions.weights.zone +
     resolvedOptions.weights.start +
-    resolvedOptions.weights.finish;
+    resolvedOptions.weights.finish +
+    resolvedOptions.weights.line;
 
   if (weightTotal <= 0) {
     return 0;
@@ -365,7 +471,15 @@ export const evaluateRealism = (
   const weightedScore =
     zoneScore * resolvedOptions.weights.zone +
     startScore * resolvedOptions.weights.start +
-    finishScore * resolvedOptions.weights.finish;
+    finishScore * resolvedOptions.weights.finish +
+    lineScore * resolvedOptions.weights.line;
 
-  return clamp(weightedScore / weightTotal, 0, 1);
+  return clamp(
+    Math.pow(
+      clamp(weightedScore / weightTotal, 0, 1),
+      resolvedOptions.overallScoreExponent,
+    ),
+    0,
+    1,
+  );
 };

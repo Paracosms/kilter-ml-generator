@@ -11,7 +11,8 @@ const main = async () => {
   console.log(`Target difficulty: ${candidate.targetDifficulty}`);
 
   const { predictedDifficulty } = await runHardcodedDifficultyTest();
-  console.log(`Hardcoded predicted difficulty: ${predictedDifficulty}`);
+  console.log(`Hardcoded predicted difficulty [ONNX]: ${predictedDifficulty}`);
+  console.log(`Hardcoded predicted difficulty [PYTHON]: 11.20529`);
 };
 
 main().catch((error) => {

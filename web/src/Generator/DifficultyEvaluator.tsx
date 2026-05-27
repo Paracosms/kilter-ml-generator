@@ -14,30 +14,7 @@ import * as ortWeb from "onnxruntime-web";
 let session: ortWeb.InferenceSession | null = null;
 
 const isNodeRuntime = typeof window === "undefined";
-const modelFileName = "kilter_grade_regressor.fp32.onnx";
-
-const ensureTrailingSlash = (value: string) =>
-    value.endsWith("/") ? value : `${value}/`;
-
-const buildPublicUrl = (baseUrl: string, relativePath: string) =>
-    new URL(
-        relativePath,
-        `${window.location.origin}${ensureTrailingSlash(baseUrl)}`,
-    ).toString();
-
-const assertModelAssetsAvailable = async (modelUrl: string) => {
-    const dataUrl = `${modelUrl}.data`;
-    const check = async (url: string) => {
-        const response = await fetch(url, { method: "HEAD", cache: "no-store" });
-        if (!response.ok) {
-            throw new Error(
-                `Missing ONNX asset: ${url} (HTTP ${response.status}).`,
-            );
-        }
-    };
-
-    await Promise.all([check(modelUrl), check(dataUrl)]);
-};
+const modelFileName = "KilterDifficultyRegressor.fp32.onnx";
 
 async function getSession() {
     if (session) return session;
@@ -45,9 +22,7 @@ async function getSession() {
     const baseUrl = isNodeRuntime
         ? "/"
         : (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/";
-    const modelPublicPath = isNodeRuntime
-        ? ""
-        : buildPublicUrl(baseUrl, `onnx/${modelFileName}`);
+    const modelPublicPath = `${baseUrl}onnx/${modelFileName}`;
     const modelFileUrl = new URL(`../../public/onnx/${modelFileName}`, import.meta.url);
 
     if (isNodeRuntime) {
@@ -60,17 +35,11 @@ async function getSession() {
         return session;
     }
 
-    try {
-        await assertModelAssetsAvailable(modelPublicPath);
-        session = await ortWeb.InferenceSession.create(modelPublicPath, {
-            executionProviders: ["wasm"],
-        });
-        return session;
-    } catch (error) {
-        const message =
-            error instanceof Error ? error.message : "Unknown ONNX load error.";
-        throw new Error(`${message} Model URL: ${modelPublicPath}`);
-    }
+    session = await ortWeb.InferenceSession.create(modelPublicPath, {
+        executionProviders: ["wasm"],
+    });
+
+    return session;
 }
 
 export async function runDifficultyModel(featureVector: Float32Array) {
