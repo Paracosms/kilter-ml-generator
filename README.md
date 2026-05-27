@@ -2,3 +2,10 @@
 
 Not done building yet so here's some stats to keep you company :]
 ![Visualizations.png](ReadmePictures/Visualizations.png)
+
+## Compile Instructions
+```bash
+cd web
+npm install
+npm run dev
+```
