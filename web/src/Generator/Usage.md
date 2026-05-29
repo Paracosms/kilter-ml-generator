@@ -7,7 +7,7 @@ This folder is for the statistical generator to create candidates.
 ```ts
 import { generateCandidate } from "./generateCandidate";
 
-const candidate = generateCandidate({ grade: "v4" });
+const candidate = generateCandidate({ grade: "v4", angle: 40 });
 ```
 
 ## Example Form
@@ -39,4 +39,3 @@ const candidate = generateCandidate({ grade: "v4" });
 ```bash
 npm run sanity:Generator
 ```
-

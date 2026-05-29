@@ -12,10 +12,13 @@ import { weightedSampleKey, weightedSampleNumber } from "./WeightedSample.tsx";
 
 const DEFAULT_MAX_PLACEMENT_RETRIES = 50;
 const DEFAULT_MAX_CANDIDATE_RETRIES = 5;
+const MIN_ANGLE = 0;
+const MAX_ANGLE = 70;
 
 type GenerateCandidateOptions = {
   grade: Grade;
   modifier?: GradeModifier;
+  angle?: number;
   rng?: () => number;
   maxPlacementRetries?: number;
 };
@@ -77,6 +80,9 @@ function buildRoleHolds(
   return holds;
 }
 
+const clampAngle = (value: number) =>
+  Math.min(MAX_ANGLE, Math.max(MIN_ANGLE, value));
+
 export function generateCandidate(
   options: GenerateCandidateOptions,
 ): GeneratedCandidate {
@@ -93,10 +99,9 @@ export function generateCandidate(
     candidateAttempt < DEFAULT_MAX_CANDIDATE_RETRIES;
     candidateAttempt += 1
   ) {
-    const sampledAngle = weightedSampleNumber(
-      profile.discrete_distributions.angles,
-      rng,
-    );
+    const sampledAngle = Number.isFinite(options.angle)
+      ? clampAngle(options.angle as number)
+      : weightedSampleNumber(profile.discrete_distributions.angles, rng);
     const roleKey = weightedSampleKey(
       profile.discrete_distributions.joint_role_count,
       rng,

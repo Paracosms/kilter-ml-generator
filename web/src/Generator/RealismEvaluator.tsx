@@ -37,6 +37,8 @@ export type Placement = {
   y: number;
 };
 
+type Point = Pick<Placement, "x" | "y">;
+
 export type PlacementIndex = {
   byId: Map<number, Placement>;
   mainMinX: number;
@@ -163,15 +165,15 @@ const clamp = (value: number, min: number, max: number) =>
 const average = (values: number[]) =>
   values.reduce((sum, value) => sum + value, 0) / values.length;
 
-const averagePoint = (placements: Placement[]) => ({
+const averagePoint = (placements: Placement[]): Point => ({
   x: average(placements.map((placement) => placement.x)),
   y: average(placements.map((placement) => placement.y)),
 });
 
 const distanceToSegment = (
-  point: Placement,
-  start: Placement,
-  end: Placement,
+  point: Point,
+  start: Point,
+  end: Point,
 ) => {
   const dx = end.x - start.x;
   const dy = end.y - start.y;

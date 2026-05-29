@@ -13,13 +13,20 @@ import {
 import boardPlacements from "./Data/BoardPlacements.json";
 
 const DEFAULT_GRADE: Grade = "v4";
+const DEFAULT_ANGLE = 40;
 const STATS_ITERATIONS = 500;
 
 export default function App() {
   const [selectedGrade, setSelectedGrade] = useState<Grade>(DEFAULT_GRADE);
   const [gradeModifier, setGradeModifier] = useState<GradeModifier>("base");
+  const [selectedAngle, setSelectedAngle] = useState<number>(DEFAULT_ANGLE);
   const [selectedPlacements, setSelectedPlacements] = useState<GeneratedHold[]>(
-    () => generateCandidate({ grade: DEFAULT_GRADE, modifier: "base" }).climb,
+    () =>
+      generateCandidate({
+        grade: DEFAULT_GRADE,
+        modifier: "base",
+        angle: DEFAULT_ANGLE,
+      }).climb,
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statsRunning, setStatsRunning] = useState(false);
@@ -39,6 +46,7 @@ export default function App() {
       const candidate = await generateBestCandidate({
         grade: selectedGrade,
         modifier: gradeModifier,
+        angle: selectedAngle,
         iterations: STATS_ITERATIONS,
         onProgress: async (progress) => {
           setStatsIteration(progress.iteration);
@@ -49,10 +57,8 @@ export default function App() {
             setSelectedPlacements(progress.bestCandidate.climb);
           }
 
-          //const progressRatio = progress.iteration / progress.totalIterations;
-          //const delayMs = Math.round(5 + 30 * progressRatio * progressRatio);
+          // Visualize each iteration
           const delayMs = 0.1;
-          // Slow down updates near the end for the visualization effect.
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         },
       });
@@ -90,8 +96,10 @@ export default function App() {
         <RunGeneratorButton
           grade={selectedGrade}
           modifier={gradeModifier}
+          angle={selectedAngle}
           onGradeChange={setSelectedGrade}
           onModifierChange={setGradeModifier}
+          onAngleChange={setSelectedAngle}
           onGenerate={handleGenerate}
           errorMessage={errorMessage}
         />

@@ -17,11 +17,15 @@ const GRADE_OPTIONS: Grade[] = [
   "v12",
 ];
 
+const ANGLE_TICKS = Array.from({ length: 15 }, (_, index) => index * 5);
+
 type RunGeneratorButtonProps = {
   grade: Grade;
   modifier: GradeModifier;
+  angle: number;
   onGradeChange: (grade: Grade) => void;
   onModifierChange: (modifier: GradeModifier) => void;
+  onAngleChange: (angle: number) => void;
   onGenerate: () => void;
   errorMessage?: string | null;
 };
@@ -44,13 +48,17 @@ function formatTargetGradeLabel(grade: Grade, modifier: GradeModifier) {
 export function RunGeneratorButton({
   grade,
   modifier,
+  angle,
   onGradeChange,
   onModifierChange,
+  onAngleChange,
   onGenerate,
   errorMessage,
 }: RunGeneratorButtonProps) {
   const selectId = useId();
   const modifierId = useId();
+  const angleId = useId();
+  const angleTicksId = useId();
   const targetLabel = formatTargetGradeLabel(grade, modifier);
 
   return (
@@ -117,6 +125,25 @@ export function RunGeneratorButton({
             V+
           </label>
         </div>
+        <label htmlFor={angleId} style={{ fontSize: 14, fontWeight: 600 }}>
+          Angle ({angle}°)
+        </label>
+        <input
+          id={angleId}
+          type="range"
+          min={0}
+          max={70}
+          step={5}
+          value={angle}
+          list={angleTicksId}
+          onChange={(event) => onAngleChange(Number(event.target.value))}
+          style={{ accentColor: "#60a5fa" }}
+        />
+        <datalist id={angleTicksId}>
+          {ANGLE_TICKS.map((tick) => (
+            <option key={tick} value={tick} />
+          ))}
+        </datalist>
         <button
           type="button"
           onClick={onGenerate}

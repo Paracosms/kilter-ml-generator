@@ -586,6 +586,7 @@ export const predictCandidateDifficulty = async (
 type BestCandidateOptions = {
   grade: Grade;
   modifier?: GradeModifier;
+  angle?: number;
   rng?: () => number;
   maxPlacementRetries?: number;
   iterations?: number;
