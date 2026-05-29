@@ -23,7 +23,7 @@ export function BoardLegend() {
                 borderRadius: 16,
                 color: "#e5e7eb",
                 padding: 16,
-                minWidth: 100,
+                minWidth: 50,
                 alignSelf: "flex-start",
             }}
         >

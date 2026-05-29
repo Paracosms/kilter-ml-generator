@@ -83,6 +83,7 @@ export default function App() {
         display: "flex",
         gap: 16,
         alignItems: "flex-start",
+        justifyContent: "center",
         flexWrap: "wrap",
       }}
     >

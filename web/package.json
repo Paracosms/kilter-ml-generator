@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "sanity:generator": "tsx ./scripts/GeneratorCMDTest.tsx"
+    "sanity:generator": "tsx test/GeneratorCMDTest.tsx"
   },
   "dependencies": {
     "onnxruntime-node": "^1.26.0",

@@ -63,6 +63,8 @@ export type RealismEvaluatorOptions = {
   finishPenaltyMinY?: number;
   // Hard reject if a foot is farther than this from any non-foot hold.
   footProximityRadius: number;
+  // Ratio (0..1) of board height after which foot-hold penalties begin.
+  footPenaltyStartRatio: number;
   // Distance from start->finish line before a hold is penalized.
   lineDistanceMax: number;
   zoneColumns: number;
@@ -87,6 +89,7 @@ export type RealismEvaluatorOptions = {
     zone: number;
     start: number;
     finish: number;
+    foot: number;
     line: number;
   };
 };
@@ -105,6 +108,8 @@ const DEFAULT_OPTIONS: RealismEvaluatorOptions = {
   finishPenaltyBelowY: 36,
   // Distance a start/regular/finish hold is required to be near a foot hold
   footProximityRadius: 60,
+  // Penalty begins above 2/3 of the board height for foot holds.
+  footPenaltyStartRatio: 2 / 3,
   // Penalty for any holds beyond 7ft from the line from start-finish
   lineDistanceMax: 72,
   zoneColumns: 3,
@@ -128,6 +133,7 @@ const DEFAULT_OPTIONS: RealismEvaluatorOptions = {
     zone: 0.5,
     start: 0.25,
     finish: 0.25,
+    foot: 0.15,
     line: 0.2,
   },
 };
@@ -440,6 +446,31 @@ export const evaluateRealism = (
     finishScore = clamp(finishScore, 0, 1);
   }
 
+  let footScore = 1;
+  if (feet.length > 0) {
+    const heightRange = placementIndex.mainMaxY - placementIndex.mainMinY;
+    if (heightRange > 0) {
+      const penalties = feet.map((foot) => {
+        const heightRatio = clamp(
+          (foot.y - placementIndex.mainMinY) / heightRange,
+          0,
+          1,
+        );
+        if (heightRatio <= resolvedOptions.footPenaltyStartRatio) {
+          return 0;
+        }
+        return clamp(
+          (heightRatio - resolvedOptions.footPenaltyStartRatio) /
+            (1 - resolvedOptions.footPenaltyStartRatio),
+          0,
+          1,
+        );
+      });
+      const averagePenalty = average(penalties);
+      footScore = clamp(1 - averagePenalty, 0, 1);
+    }
+  }
+
   let lineScore = 1;
   if (starts.length > 0 && finishes.length > 0 && allPlacements.length > 0) {
     const startAvg = averagePoint(starts);
@@ -464,6 +495,7 @@ export const evaluateRealism = (
     resolvedOptions.weights.zone +
     resolvedOptions.weights.start +
     resolvedOptions.weights.finish +
+    resolvedOptions.weights.foot +
     resolvedOptions.weights.line;
 
   if (weightTotal <= 0) {
@@ -474,6 +506,7 @@ export const evaluateRealism = (
     zoneScore * resolvedOptions.weights.zone +
     startScore * resolvedOptions.weights.start +
     finishScore * resolvedOptions.weights.finish +
+    footScore * resolvedOptions.weights.foot +
     lineScore * resolvedOptions.weights.line;
 
   return clamp(

@@ -29,7 +29,7 @@ export function ToggleGeneratorStats({
         fontFamily: "helvetica",
         color: "#e5e7eb",
         padding: 16,
-        minWidth: 220,
+        minWidth: 50,
       }}
     >
       <div style={{ display: "grid", gap: 12 }}>

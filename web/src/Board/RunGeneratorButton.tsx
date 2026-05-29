@@ -70,7 +70,7 @@ export function RunGeneratorButton({
         fontFamily: "helvetica",
         color: "#e5e7eb",
         padding: 16,
-        minWidth: 220,
+        minWidth: 50,
       }}
     >
       <div style={{ display: "grid", gap: 12 }}>
@@ -151,7 +151,7 @@ export function RunGeneratorButton({
             padding: "10px 12px",
             borderRadius: 8,
             border: "none",
-            background: "#2563eb",
+            background: "#4e70cd",
             color: "#f9fafb",
             fontWeight: 600,
             fontFamily: "Helvetica",
