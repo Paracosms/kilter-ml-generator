@@ -21,6 +21,7 @@ keeping the best scoring candidate on screen.
 ![Visualizations.png](assets/Visualizations.png)
 
 ## Compile Instructions
+Clone repo, then open terminal in the root directory and run:
 ```bash
 cd web
 npm install
