@@ -15,6 +15,19 @@ and a deterministic model that scores the climb on how realistic it is.
 The board visualization then updates in realtime as iterations of the generator run, 
 keeping the best scoring candidate on screen.
 
+## Model Accuracy
+### Validation MAE: 1.5673
+Exact Grade (± 0): 32.46%
+<br>
+Within ± 1 Grade:  77.57%
+<br>
+Within ± 2 Grades: 94.10%
+<br>
+<br>
+The smaller the gray area is on the graph, the less likely the model is to be correct.
+
+![ModelAccuracy.png](assets/ModelAccuracy.png)
+
 ## Dataset Statistics 
 ### Dataset Credit: [Vilin97/KilterBoard](https://huggingface.co/datasets/Vilin97/KilterBoard)
 

@@ -81,11 +81,10 @@ export function GeneratorStats({
 
   return (
     <section
-      aria-label="Generator Stats"
       className="min-w-[50px] rounded-2xl bg-[var(--color-primary)] p-4 text-[var(--color-text)]"
     >
       <div className="grid gap-3">
-        <div className="text-sm font-semibold">Generator stats</div>
+        <div className="text-sm font-semibold">Generator Stats</div>
         <div className="text-[13px] text-[var(--color-text)]">
           Time: {elapsedLabel}
         </div>

@@ -65,6 +65,14 @@ export type RealismEvaluatorOptions = {
   footProximityRadius: number;
   // Ratio (0..1) of board height after which foot-hold penalties begin.
   footPenaltyStartRatio: number;
+  // Distance from nearest non-foot hold where foot penalties start.
+  footDistancePenaltyStart: number;
+  // Distance scale for penalty growth beyond the start threshold.
+  footDistancePenaltyScale: number;
+  // Exponent applied to distance penalty curve; >1 makes it harsher.
+  footDistancePenaltyExponent: number;
+  // 0..1 weight to blend distance penalty vs height penalty for feet.
+  footDistancePenaltyWeight: number;
   // Distance from start->finish line before a hold is penalized.
   lineDistanceMax: number;
   zoneColumns: number;
@@ -110,6 +118,14 @@ const DEFAULT_OPTIONS: RealismEvaluatorOptions = {
   footProximityRadius: 60,
   // Penalty begins above 2/3 of the board height for foot holds.
   footPenaltyStartRatio: 2 / 3,
+  // Distance penalty begins beyond 24 inches from a non-foot hold.
+  footDistancePenaltyStart: 24,
+  // Distance scale for penalty growth beyond the start threshold.
+  footDistancePenaltyScale: 48,
+  // Slightly harsher curve for far feet.
+  footDistancePenaltyExponent: 1.5,
+  // Blend distance penalty and height penalty evenly.
+  footDistancePenaltyWeight: 0.5,
   // Penalty for any holds beyond 7ft from the line from start-finish
   lineDistanceMax: 72,
   zoneColumns: 3,
@@ -449,8 +465,9 @@ export const evaluateRealism = (
   let footScore = 1;
   if (feet.length > 0) {
     const heightRange = placementIndex.mainMaxY - placementIndex.mainMinY;
+    const handPlacements = [...starts, ...regulars, ...finishes];
     if (heightRange > 0) {
-      const penalties = feet.map((foot) => {
+      const heightPenalties = feet.map((foot) => {
         const heightRatio = clamp(
           (foot.y - placementIndex.mainMinY) / heightRange,
           0,
@@ -466,8 +483,42 @@ export const evaluateRealism = (
           1,
         );
       });
-      const averagePenalty = average(penalties);
-      footScore = clamp(1 - averagePenalty, 0, 1);
+      const heightPenalty = average(heightPenalties);
+
+      let distancePenalty = 0;
+      if (handPlacements.length > 0) {
+        const distancePenalties = feet.map((foot) => {
+          let closest = Number.POSITIVE_INFINITY;
+          for (const hand of handPlacements) {
+            const distance = Math.hypot(foot.x - hand.x, foot.y - hand.y);
+            if (distance < closest) {
+              closest = distance;
+            }
+          }
+          if (closest <= resolvedOptions.footDistancePenaltyStart) {
+            return 0;
+          }
+          const scaled =
+            (closest - resolvedOptions.footDistancePenaltyStart) /
+            Math.max(1, resolvedOptions.footDistancePenaltyScale);
+          const curved = Math.pow(
+            Math.max(0, scaled),
+            resolvedOptions.footDistancePenaltyExponent,
+          );
+          return clamp(1 - Math.exp(-curved), 0, 1);
+        });
+        distancePenalty = average(distancePenalties);
+      }
+
+      const distanceWeight = clamp(
+        resolvedOptions.footDistancePenaltyWeight,
+        0,
+        1,
+      );
+      const blendedPenalty =
+        heightPenalty * (1 - distanceWeight) +
+        distancePenalty * distanceWeight;
+      footScore = clamp(1 - blendedPenalty, 0, 1);
     }
   }
 
