@@ -1,20 +1,28 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { KilterBoard } from "./Board/KilterBoard";
 import { BoardLegend } from "./Board/BoardLegend";
 import { RunGeneratorButton } from "./Board/RunGeneratorButton";
-import { ToggleGeneratorStats } from "./Board/ToggleGeneratorStats";
+import { GeneratorStats } from "./Board/GeneratorStats.tsx";
 import {
-  generateBestCandidate,
   generateCandidate,
   type GeneratedHold,
   type Grade,
   type GradeModifier,
 } from "./Generator";
+import type {
+  HostToWorkerMessage,
+  WorkerToHostMessage,
+} from "./Generator/Workers/WorkerMessages.tsx";
 import boardPlacements from "./Data/BoardPlacements.json";
 
 const DEFAULT_GRADE: Grade = "v4";
 const DEFAULT_ANGLE = 40;
-const STATS_ITERATIONS = 500;
+const STATS_ITERATIONS = 1000;
+
+const createGeneratorWorker = () =>
+  new Worker(new URL("./Generator/Workers/GeneratorWorker.tsx", import.meta.url), {
+    type: "module",
+  });
 
 export default function App() {
   const [selectedGrade, setSelectedGrade] = useState<Grade>(DEFAULT_GRADE);
@@ -35,37 +43,76 @@ export default function App() {
     null,
   );
   const [statsBestScore, setStatsBestScore] = useState<number | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const activeRequestRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const worker = createGeneratorWorker();
+    workerRef.current = worker;
+
+    worker.onmessage = (event: MessageEvent<WorkerToHostMessage>) => {
+      const message = event.data;
+      if (activeRequestRef.current !== message.requestId) {
+        return;
+      }
+      if (message.type === "progress") {
+        setStatsIteration(message.iteration);
+        setStatsCurrentScore(message.currentScore);
+        setStatsBestScore(message.bestScore);
+        if (message.bestUpdated) {
+          setSelectedPlacements(message.bestCandidate.climb);
+        }
+        return;
+      }
+      if (message.type === "done") {
+        setSelectedPlacements(message.candidate.climb);
+        setErrorMessage(null);
+        setStatsRunning(false);
+        return;
+      }
+      if (message.type === "error") {
+        setErrorMessage(message.error);
+        setStatsRunning(false);
+      }
+    };
+
+    worker.onerror = () => {
+      setErrorMessage("Worker failed while generating.");
+      setStatsRunning(false);
+    };
+
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, []);
 
   async function handleGenerate() {
+    const worker = workerRef.current;
+    if (!worker) {
+      setErrorMessage("Worker is not available.");
+      return;
+    }
+
     try {
       setStatsRunning(true);
       setStatsIteration(0);
       setStatsCurrentScore(null);
       setStatsBestScore(null);
+      setErrorMessage(null);
 
-      const candidate = await generateBestCandidate({
+      const requestId = (activeRequestRef.current ?? 0) + 1;
+      activeRequestRef.current = requestId;
+
+      const message: HostToWorkerMessage = {
+        type: "generate",
+        requestId,
         grade: selectedGrade,
         modifier: gradeModifier,
         angle: selectedAngle,
         iterations: STATS_ITERATIONS,
-        onProgress: async (progress) => {
-          setStatsIteration(progress.iteration);
-          setStatsCurrentScore(progress.currentScore);
-          setStatsBestScore(progress.bestScore);
-
-          if (progress.bestUpdated) {
-            setSelectedPlacements(progress.bestCandidate.climb);
-          }
-
-          // Visualize each iteration
-          const delayMs = 0.1;
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
-        },
-      });
-
-      setSelectedPlacements(candidate.climb);
-      setErrorMessage(null);
-      setStatsRunning(false);
+      };
+      worker.postMessage(message);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -77,23 +124,14 @@ export default function App() {
   }
 
   return (
-    <div
-      style={{
-        padding: 16,
-        display: "flex",
-        gap: 16,
-        alignItems: "flex-start",
-        justifyContent: "center",
-        flexWrap: "wrap",
-      }}
-    >
+    <div className="flex flex-wrap justify-center gap-4 p-4">
       <KilterBoard
         placements={boardPlacements}
         selectedPlacements={selectedPlacements}
         flipY={true}
       />
 
-      <div style={{ display: "grid", gap: 16, alignSelf: "flex-start" }}>
+      <div className="grid gap-4 self-start">
         <RunGeneratorButton
           grade={selectedGrade}
           modifier={gradeModifier}
@@ -104,7 +142,7 @@ export default function App() {
           onGenerate={handleGenerate}
           errorMessage={errorMessage}
         />
-        <ToggleGeneratorStats
+        <GeneratorStats
           isRunning={statsRunning}
           currentIteration={statsIteration}
           totalIterations={STATS_ITERATIONS}

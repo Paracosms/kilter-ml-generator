@@ -1,6 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  --color-background: #0b0f1a;
+  --color-text: #e5e7eb;
+  --color-primary: #111827;
+  --color-accent: #4e70cd;
+
+  --color-role-start: #22c55e;
+  --color-role-regular: #3b82f6;
+  --color-role-finish: #ef4444;
+  --color-role-foot: #f59e0b;
+  --color-role-fallback: #a855f7;
+  --color-hold-empty: #9ca3af;
+}
+
 body,
 html {
-  background-color: #0b0f1a;
+  background-color: var(--color-background);
+  font-family: "Helvetica";
   margin: 0;
   padding: 0;
 }

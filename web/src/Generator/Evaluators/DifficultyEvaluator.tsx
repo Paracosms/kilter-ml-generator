@@ -13,7 +13,9 @@ import * as ortWeb from "onnxruntime-web";
 
 let session: ortWeb.InferenceSession | null = null;
 
-const isNodeRuntime = typeof window === "undefined";
+const isNodeRuntime =
+  typeof process !== "undefined" &&
+  !!(process as { versions?: { node?: string } }).versions?.node;
 const modelFileName = "KilterDifficultyRegressor.fp32.onnx";
 
 async function getSession() {

@@ -18,39 +18,19 @@ export function BoardLegend() {
         // legend background
         <aside
             aria-label="Role colors legend"
-            style={{
-                background: "#111827",
-                borderRadius: 16,
-                color: "#e5e7eb",
-                padding: 16,
-                minWidth: 50,
-                alignSelf: "flex-start",
-            }}
+            className="min-w-[50px] self-start rounded-2xl bg-slate-900 p-4 text-slate-200"
         >
-            <div style={{ display: "grid", gap: 12 }}>
+            <div className="grid gap-3">
                 {roleLegend.map(({ roleId, label }) => (
                     // label and color
                     <div
                         key={roleId}
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: "12px 1fr",
-                            alignItems: "center",
-                            columnGap: 15,
-                            fontSize: 30,
-                            fontFamily: "Helvetica",
-                            lineHeight: 1.2,
-                        }}
+                        className="grid grid-cols-[20px_1fr] items-center gap-x-[15px] text-[30px] leading-[1.2]"
                     >
                         <span
                             aria-hidden="true"
-                            style={{
-                                width: 20,
-                                height: 20,
-                                borderRadius: 999,
-                                background: roleColors[roleId],
-                                display: "inline-block",
-                            }}
+                            className="inline-block size-5 rounded-full"
+                            style={{ background: roleColors[roleId] }}
                         />
                         <span>{label}</span>
                     </div>
@@ -59,4 +39,3 @@ export function BoardLegend() {
         </aside>
     );
 }
-

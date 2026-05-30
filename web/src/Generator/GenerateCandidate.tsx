@@ -1,5 +1,6 @@
-import { getGradeProfile, getTargetDifficulty } from "./GeneratorStats.tsx";
 import {
+  getGradeProfile,
+  getTargetDifficulty,
   ROLE_ID_BY_NAME,
   ROLE_NAMES_IN_ORDER,
   type GeneratedCandidate,
@@ -7,7 +8,7 @@ import {
   type GradeModifier,
   type RoleName,
   type SampledRoleCounts,
-} from "./Types.tsx";
+} from "./GeneratorUtils.tsx";
 import { weightedSampleKey, weightedSampleNumber } from "./WeightedSample.tsx";
 
 const DEFAULT_MAX_PLACEMENT_RETRIES = 50;
@@ -157,4 +158,3 @@ export function generateCandidate(
 
   throw new Error("Failed to generate a candidate climb.");
 }
-

@@ -11,10 +11,12 @@
     "sanity:generator": "tsx test/GeneratorCMDTest.tsx"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.3.0",
     "onnxruntime-node": "^1.26.0",
     "onnxruntime-web": "^1.26.0",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

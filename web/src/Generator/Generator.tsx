@@ -1,18 +1,18 @@
 import boardPlacements from "../Data/BoardPlacements.json";
-import { runDifficultyModel } from "./DifficultyEvaluator.tsx";
+import { runDifficultyModel } from "./Evaluators/DifficultyEvaluator.tsx";
 import { generateCandidate } from "./GenerateCandidate.tsx";
 import {
   buildPlacementIndex,
   evaluateRealism,
   type Placement,
-} from "./RealismEvaluator.tsx";
+} from "./Evaluators/RealismEvaluator.tsx";
 import {
   ROLE_ID_BY_NAME,
   type GeneratedCandidate,
   type Grade,
   type GradeModifier,
   type RoleId,
-} from "./Types";
+} from "./GeneratorUtils.tsx";
 
 type PlacementEntry = {
   placementId: number;

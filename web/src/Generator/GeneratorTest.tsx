@@ -1,7 +1,13 @@
 import { generateCandidate } from "./GenerateCandidate.tsx";
-import { getGradeProfile, getTargetDifficulty } from "./GeneratorStats.tsx";
 import { predictCandidateDifficulty } from "./Generator.tsx";
-import type { GeneratedCandidate, Grade, GradeModifier, RoleId } from "./Types.tsx";
+import {
+  getGradeProfile,
+  getTargetDifficulty,
+  type GeneratedCandidate,
+  type Grade,
+  type GradeModifier,
+  type RoleId,
+} from "./GeneratorUtils.tsx";
 
 const VALID_ROLE_IDS = new Set([12, 13, 14, 15]);
 

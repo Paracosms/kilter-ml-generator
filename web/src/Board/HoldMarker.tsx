@@ -17,6 +17,7 @@ export function HoldMarker({
 
     // fill in respective color, otherwise leave it greyed out
     const fill = hasRole ? getRoleColor(roleId) : "transparent";
+    const stroke = hasRole ? fill : "var(--color-hold-empty)";
 
     return (
         <circle
@@ -24,7 +25,7 @@ export function HoldMarker({
             cy={y}
             r={radius}
             fill={fill}
-            stroke={hasRole ? fill : "#9ca3af"}
+            stroke={stroke}
             strokeWidth={hasRole ? 2 : 1.5}
             opacity={hasRole ? 1 : 0.45}
         />

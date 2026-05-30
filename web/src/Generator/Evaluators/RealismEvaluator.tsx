@@ -1,5 +1,5 @@
 // evaluates a generated candidate on realism
-// input: GeneratedCandidate: form inferred by Types.tsx
+// input: GeneratedCandidate: form inferred by GeneratorUtils.tsx
 // output: RealismScore: from 0.0 to 1.0, where 1.0 is the highest and most perfect climb
 
 // hard fails (RealismScore set to 0.0 and returns immediately)
@@ -26,8 +26,8 @@
     // penalize starts that are too low
     // should be an adjustable constant, perhaps start penalizing below y <= 36
 
-import { ROLE_ID_BY_NAME } from "./Types";
-import type { GeneratedCandidate, RoleId } from "./Types";
+import { ROLE_ID_BY_NAME } from "../GeneratorUtils.tsx";
+import type { GeneratedCandidate, RoleId } from "../GeneratorUtils.tsx";
 
 export type RealismScore = number;
 

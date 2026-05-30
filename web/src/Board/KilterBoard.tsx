@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { HoldMarker } from "./HoldMarker";
 
 export type BoardPlacement = {
@@ -59,16 +60,16 @@ export function KilterBoard(
     }
 
     return (
-        <div style={{ width, maxWidth: "100%" }}>
+        <div
+            className="w-[var(--board-width)] max-w-full"
+            style={{ "--board-width": `${width}px` } as CSSProperties}
+        >
             <svg
                 viewBox={viewBox}
                 width="100%"
                 height={height}
                 preserveAspectRatio="xMidYMid meet"
-                style={{
-                    background: "#111827",
-                    borderRadius: 16,
-                }}
+                className="rounded-2xl bg-[var(--color-primary)]"
             >
                 {placements.map((placement) => {
                     // maps placement to role, if it exists. renders all placements and their color if applicable

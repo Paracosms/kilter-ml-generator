@@ -64,30 +64,17 @@ export function RunGeneratorButton({
   return (
     <section
       aria-label="Generate a candidate climb"
-      style={{
-        background: "#111827",
-        borderRadius: 16,
-        fontFamily: "helvetica",
-        color: "#e5e7eb",
-        padding: 16,
-        minWidth: 50,
-      }}
+      className="min-w-[50px] rounded-2xl bg-[var(--color-primary)] p-4 text-[var(--color-text)]"
     >
-      <div style={{ display: "grid", gap: 12 }}>
-        <label htmlFor={selectId} style={{ fontSize: 14, fontWeight: 600 }}>
+      <div className="grid gap-3">
+        <label htmlFor={selectId} className="text-sm font-semibold">
           Target grade ({targetLabel})
         </label>
         <select
           id={selectId}
           value={grade}
           onChange={(event) => onGradeChange(event.target.value as Grade)}
-          style={{
-            padding: "8px 10px",
-            borderRadius: 8,
-            border: "1px solid #374151",
-            background: "#0f172a",
-            color: "#e5e7eb",
-          }}
+          className="rounded-lg border border-slate-700 bg-slate-900 px-[10px] py-2 text-slate-200"
         >
           {GRADE_OPTIONS.map((option) => (
             <option key={option} value={option}>
@@ -95,10 +82,10 @@ export function RunGeneratorButton({
             </option>
           ))}
         </select>
-        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+        <div className="flex items-center gap-4">
           <label
             htmlFor={`${modifierId}-minus`}
-            style={{ display: "flex", gap: 6, alignItems: "center" }}
+            className="flex items-center gap-1.5"
           >
             <input
               id={`${modifierId}-minus`}
@@ -112,7 +99,7 @@ export function RunGeneratorButton({
           </label>
           <label
             htmlFor={`${modifierId}-plus`}
-            style={{ display: "flex", gap: 6, alignItems: "center" }}
+            className="flex items-center gap-1.5"
           >
             <input
               id={`${modifierId}-plus`}
@@ -125,7 +112,7 @@ export function RunGeneratorButton({
             V+
           </label>
         </div>
-        <label htmlFor={angleId} style={{ fontSize: 14, fontWeight: 600 }}>
+        <label htmlFor={angleId} className="text-sm font-semibold">
           Angle ({angle}°)
         </label>
         <input
@@ -137,7 +124,7 @@ export function RunGeneratorButton({
           value={angle}
           list={angleTicksId}
           onChange={(event) => onAngleChange(Number(event.target.value))}
-          style={{ accentColor: "#60a5fa" }}
+          className="accent-blue-400"
         />
         <datalist id={angleTicksId}>
           {ANGLE_TICKS.map((tick) => (
@@ -147,21 +134,12 @@ export function RunGeneratorButton({
         <button
           type="button"
           onClick={onGenerate}
-          style={{
-            padding: "10px 12px",
-            borderRadius: 8,
-            border: "none",
-            background: "#4e70cd",
-            color: "#f9fafb",
-            fontWeight: 600,
-            fontFamily: "Helvetica",
-            cursor: "pointer",
-          }}
+          className="cursor-pointer rounded-lg border-0 bg-[var(--color-accent)] px-3 py-2.5 font-semibold text-slate-50"
         >
           Generate climb
         </button>
         {errorMessage ? (
-          <div role="alert" style={{ color: "#fca5a5", fontSize: 13 }}>
+          <div role="alert" className="text-[13px] text-red-300">
             {errorMessage}
           </div>
         ) : null}
