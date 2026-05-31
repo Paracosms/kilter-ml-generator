@@ -44,6 +44,10 @@ async function getSession() {
     return session;
 }
 
+export async function preloadDifficultyModel() {
+    await getSession();
+}
+
 export async function runDifficultyModel(featureVector: Float32Array) {
     const modelSession = await getSession();
 

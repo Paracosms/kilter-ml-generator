@@ -9,7 +9,11 @@ type GenerateRequest = {
   iterations: number;
 };
 
-export type HostToWorkerMessage = GenerateRequest;
+type PreloadRequest = {
+  type: "preload";
+};
+
+export type HostToWorkerMessage = GenerateRequest | PreloadRequest;
 
 export type ProgressMessage = {
   type: "progress";
@@ -34,8 +38,18 @@ export type ErrorMessage = {
   error: string;
 };
 
+type PreloadDoneMessage = {
+  type: "preload-done";
+};
+
+type PreloadErrorMessage = {
+  type: "preload-error";
+  error: string;
+};
+
 export type WorkerToHostMessage =
   | ProgressMessage
   | DoneMessage
-  | ErrorMessage;
-
+  | ErrorMessage
+  | PreloadDoneMessage
+  | PreloadErrorMessage;

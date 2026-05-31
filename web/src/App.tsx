@@ -50,9 +50,21 @@ export default function App() {
     const worker = createGeneratorWorker();
     workerRef.current = worker;
 
+    const preloadMessage: HostToWorkerMessage = {
+      type: "preload",
+    };
+    worker.postMessage(preloadMessage);
+
     worker.onmessage = (event: MessageEvent<WorkerToHostMessage>) => {
       const message = event.data;
-      if (activeRequestRef.current !== message.requestId) {
+      if ("requestId" in message && activeRequestRef.current !== message.requestId) {
+        return;
+      }
+      if (message.type === "preload-error") {
+        console.warn(`Model preload failed: ${message.error}`);
+        return;
+      }
+      if (message.type === "preload-done") {
         return;
       }
       if (message.type === "progress") {

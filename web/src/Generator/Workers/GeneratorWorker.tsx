@@ -1,4 +1,5 @@
 import { generateBestCandidate } from "../Generator.tsx";
+import { preloadDifficultyModel } from "../Evaluators/DifficultyEvaluator.tsx";
 import type {
   HostToWorkerMessage,
   WorkerToHostMessage,
@@ -9,6 +10,26 @@ const ctx = self as DedicatedWorkerGlobalScope;
 
 ctx.onmessage = async (event: MessageEvent<HostToWorkerMessage>) => {
   const message = event.data;
+  if (message.type === "preload") {
+    try {
+      await preloadDifficultyModel();
+      const doneMessage: WorkerToHostMessage = {
+        type: "preload-done",
+      };
+      ctx.postMessage(doneMessage);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to preload the model.";
+      const errorPayload: WorkerToHostMessage = {
+        type: "preload-error",
+        error: errorMessage,
+      };
+      ctx.postMessage(errorPayload);
+    }
+    return;
+  }
   if (message.type !== "generate") {
     return;
   }
@@ -48,4 +69,3 @@ ctx.onmessage = async (event: MessageEvent<HostToWorkerMessage>) => {
     ctx.postMessage(errorPayload);
   }
 };
-
