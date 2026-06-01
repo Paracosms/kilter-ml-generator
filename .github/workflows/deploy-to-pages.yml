@@ -1,0 +1,61 @@
+name: Build and Deploy to Paracosms.github.io
+
+on:
+  push: {}
+
+jobs:
+  build-and-deploy:
+    name: Build web and deploy to Paracosms.github.io
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        working-directory: web
+        run: |
+          npm ci
+
+      - name: Build
+        working-directory: web
+        run: |
+          npm run build
+
+      - name: Checkout Pages repository
+        uses: actions/checkout@v4
+        with:
+          # Repository receiving the site content
+          repository: Paracosms/Paracosms.github.io
+          # A repository secret PAGES_REPO_TOKEN must contain a PAT with repo write access
+          token: ${{ secrets.PAGES_REPO_TOKEN }}
+          path: pages-repo
+          fetch-depth: 0
+
+      - name: Copy build to Pages repo
+        run: |
+          rm -rf pages-repo/kilter-generator || true
+          mkdir -p pages-repo/kilter-generator
+          cp -a web/dist/. pages-repo/kilter-generator/
+
+      - name: Commit and push to Pages repo
+        run: |
+          cd pages-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Deploy kilter-generator build from $GITHUB_REPOSITORY at $GITHUB_SHA"
+            # Update 'main' if your Pages repo uses a different default branch
+            git push origin HEAD:main
+          fi
