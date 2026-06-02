@@ -146,7 +146,7 @@ export function generateCandidate(
     }
 
     return {
-    // @ts-ignore
+    // @ts-expect-error: Doesn't conform to GeneratedHold type because roleId is a number, but is compatible with the frontend's expected format.
       climb,
       grade: options.grade,
       modifier,

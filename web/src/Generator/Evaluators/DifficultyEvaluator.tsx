@@ -25,7 +25,7 @@ async function getSession() {
         ? "/"
         : (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/";
     const modelPublicPath = `${baseUrl}onnx/${modelFileName}`;
-    const modelFileUrl = new URL(`../../public/onnx/${modelFileName}`, import.meta.url);
+    const modelFileUrl = new URL(`../../../public/onnx/${modelFileName}`, import.meta.url);
 
     if (isNodeRuntime) {
         const ortNode = await import("onnxruntime-node");

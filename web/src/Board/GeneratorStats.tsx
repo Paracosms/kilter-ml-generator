@@ -36,7 +36,7 @@ export function GeneratorStats({
     if (currentIteration === 0) {
       startTimeRef.current = null;
       stopTimeRef.current = null;
-      setElapsedMs(null);
+      //setElapsedMs(0);
     }
   }, [currentIteration]);
 

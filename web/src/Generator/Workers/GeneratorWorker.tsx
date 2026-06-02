@@ -5,7 +5,7 @@ import type {
   WorkerToHostMessage,
 } from "./WorkerMessages.tsx";
 
-// @ts-ignore
+// @ts-expect-error: This file is treated as a module, but we need to access the global scope to set up the worker message handler
 const ctx = self as DedicatedWorkerGlobalScope;
 
 ctx.onmessage = async (event: MessageEvent<HostToWorkerMessage>) => {
